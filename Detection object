@@ -1,0 +1,72 @@
+!pip uninstall tensorflow -y
+!pip install tensorflow==1.15.3
+
+!apt-get install -y -qq protobuf-compiler python-pil python-lxml(ลงคอมไพลเลอร์, พิลโลวกับไลบารีเอลเอ็กซ์เอมเอลสำหรับลิงก)
+!git clone --quiet https://github.com/tensorflow/models.git(ลงไฟล์จากกิตฮับ)
+cd models/research(เข้าไปในไฟล์รีเสิร์จ)
+
+#ระบุที่อยู่ไฟล์ฺ
+import sys
+sys.path.append('/content/models/research')
+sys.path.append('/content/models/research/slim')
+sys.path.append('/content/models/research/object_detection')
+
+cd object_detection/(เข้าไปในไฟล์ออบเจ็กต์ดีเทคชั่น)
+pip install tf_slim(ใช้ฝึกโมเดล)
+
+#Import pip
+import numpy as np
+import os
+import six.moves.urllib as urllib
+import sys
+import tarfile
+import tensorflow as tf
+import zipfile
+
+
+from distutils.version import StrictVersion
+from collections import defaultdict
+from io import StringIO(ใช้อ่านไฟล์)
+from matplotlib import pyplot as plt(ใช้ทำตาราง)
+from PIL import Image(ใช้อ่านภาพ)
+
+
+# This is needed since the notebook is stored in the object_detection folder.
+sys.path.append("..")
+from object_detection.utils import ops as utils_ops(
+
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as vis_util
+
+#if StrictVersion(tf.__version__) < StrictVersion('1.9.0'):
+#  raise ImportError('Please upgrade your TensorFlow installation to v1.9.* or later!')
+
+# What model to download.
+MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
+MODEL_FILE = MODEL_NAME + '.tar.gz'
+DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
+
+# Path to frozen detection graph. This is the actual model that is used for the object detection.
+PATH_TO_FROZEN_GRAPH = MODEL_NAME + '/frozen_inference_graph.pb'
+
+# List of the strings that is used to add correct label for each box.
+PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
+
+NUM_CLASSES = 90
+
+opener = urllib.request.URLopener()
+opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
+tar_file = tarfile.open(MODEL_FILE)
+for file in tar_file.getmembers():
+  file_name = os.path.basename(file.name)
+  if 'frozen_inference_graph.pb' in file_name:
+    tar_file.extract(file, os.getcwd())
+    
+    
+    detection_graph = tf.Graph()
+with detection_graph.as_default():
+  od_graph_def = tf.GraphDef()
+  with tf.gfile.GFile(PATH_TO_FROZEN_GRAPH, 'rb') as fid:
+    serialized_graph = fid.read()
+    od_graph_def.ParseFromString(serialized_graph)
+    tf.import_graph_def(od_graph_def, name='')
